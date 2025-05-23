@@ -1,4 +1,4 @@
-import { useState, useEffect} from "react";
+import { useState} from "react";
 import React from 'react';
 //Does not invalidate "+" sign
 function App() {
@@ -18,7 +18,7 @@ function App() {
       setChildCount(value);
     }
     try {
-      if (value != '' && (!integerRegex.test(value) || specialChar.test(value))) {
+      if (value !== '' && (!integerRegex.test(value) || specialChar.test(value))) {
         console.log('Value is not number:', value);
         throw new Error('Value is not number:', value);
       }
