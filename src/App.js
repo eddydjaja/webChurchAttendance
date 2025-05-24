@@ -1,4 +1,4 @@
-import { useState} from "react";
+import { useState, useEffect} from "react";
 import React from 'react';
 //Does not invalidate "+" sign
 function App() {
@@ -43,9 +43,19 @@ function App() {
     console.log('Birthday:', birthday);
     console.log('Other Event:', otherEvent);
   }
+  const [data, setData] = useState('');
+
+  useEffect(() => {
+    (async function () {
+      console.log('Fetching data from API...');
+      //const { text } = await( await fetch(`/api/src/functions/attendanceAction`)).json();
+      const { text } = (await fetch(`/api/attendanceAction`)).body;
+      setData(text);
+    })();
+  });
   return (
     <div className="App">
-      <h1>CBM Attendance</h1>
+      <h1>CBM Attendance1</h1>
       <form>
         <label>
           Adult Count
@@ -93,6 +103,7 @@ function App() {
         <br></br>
         <button type="submit" onClick={handleSubmission}>Submit</button>
       </form>
+       <div>API data test: {data}</div>
     </div>
   );
 }
