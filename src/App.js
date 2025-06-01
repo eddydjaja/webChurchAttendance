@@ -44,7 +44,7 @@ function App() {
     }
     setNewEventsChecked([...newEventsChecked, name]);
   }
-  const getDate = () => {
+  /*const getDate = () => {
     const todayTemp = new Date();
     console.log('Today\'s date:', todayTemp);
     const today = new CalendarDate(todayTemp.getFullYear(), todayTemp.getMonth()+1, todayTemp.getDate());
@@ -58,8 +58,7 @@ function App() {
     //setYear(today.getFullYear());
     //setDate(today.getDate());
     console.log('Today\'s date:', today.month);
-    return;
-  }
+  };*/
   const checkNumber = (value, countType) => {
     if (countType === 'setAdultCount') {
       setAdultCount(value);
@@ -338,10 +337,19 @@ function App() {
   }
   //const [placeholderDate, setPlaceholderDate] = useState(null);
   useEffect(() => {
-    getDate(); // Ensure month, date, year are set
+    //getDate(); // Ensure month, date, year are set
+    const todayTemp = new Date();
+    console.log('Today\'s date:', todayTemp);
+    const today = new CalendarDate(todayTemp.getFullYear(), todayTemp.getMonth()+1, todayTemp.getDate());
+    //const today = new CalendarDate();
+    setMonth(today.month); // CalendarDate months are 0-indexed, so we add 1
+    //setMonth(today.getMonth() + 1);
+    setYear(today.year);
+    setDate(today.day);
+    setDefaultDate(today.toString());
     fetchEvents('init');
-    console.log('Fetching data from date...');
-  }, []);
+    //console.log('Fetching data from date...');
+  }, []); // Fetch events on mount and when year, month, or date changes
   // useEffect(() => {
   //   // Update placeholderDate whenever year, month, or date changes
   //   console.log('Year:', year, 'Month:', month, 'Date:', date);
