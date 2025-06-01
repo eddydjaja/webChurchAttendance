@@ -22,6 +22,7 @@ function App() {
   const [editName, setEditName] = useState(false);
   const [eventToChange, setEventToChange] = useState('');
   const [defaultDate, setDefaultDate] = useState(''); 
+  const [submitted, setSubmitted] = useState(false);
   const handleCheckboxChange = (id, name) => {
     console.log('Checkbox: ', id, 'Name: ', name);
     let e = eventsChecked.indexOf(id);
@@ -235,6 +236,7 @@ function App() {
         if (await writeNewEvent()) {
           await writeEvent();
         }
+        setSubmitted(true);
       }
       else {
         alert('Error writing new attendance data. Please try again.');
@@ -370,7 +372,8 @@ function App() {
   //   placeholderDate = new CalendarDate(year, month, date);
   // }
   return (
-    <div className="App">
+    !submitted ? (
+      <div className="App">
       <h1>CBM Attendance</h1>
       <form>
         <DatePicker
@@ -485,6 +488,13 @@ function App() {
         </div>
       ))}
     </div>
+    ) : (
+    <div className="App">
+      <h1>CBM Attendance</h1>
+      <p>Thank you for submitting your attendance!</p>
+      <Button onPress={() => window.location.reload()}>Submit Another Attendance</Button>
+    </div>
+    )
   );
 }
 export default App;
