@@ -7,8 +7,10 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
-    "@azure/functions": "^4.0.0"
+    "@azure/functions": "^4.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "mysql": "^2.18.1"
   },
-  "devDependencies": {},
   "main": "src/{index.js,functions/*.js}"
 }

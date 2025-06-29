@@ -1,0 +1,283 @@
+:root {
+    font-family:'Segoe UI', Verdana, sans-serif;
+    color: #6d6c6c;
+    --text-color: #6d6c6c;
+    margin-left: 3em;
+    margin-right: 3em;
+    /* --overlay-background: #1a1717; */
+}
+h1 {
+    /* color: #1D1C1C; */
+    font-size: 2em;
+    /* text-align: center; */
+    margin-top: 20px;
+    font-weight: bold;
+}
+.react-aria-Label {
+    font-size: 1.5em;
+    text-align: left;
+    font-weight: bold;
+}
+.calendar-header {
+  display: flex;
+  margin-left: 0;
+}
+.calendar-buttons {
+  border: none;
+  background: transparent;
+  margin-top: -4px;
+}
+.date {
+  margin-right: 10px;
+}
+.dateGroup {
+  display: flex;
+}
+.addEvent {
+  border-radius: 50px;
+  /* border-color: #cacbf8; */
+  padding: 10px 20px 10px 20px;
+  margin: auto;
+  background: transparent;
+  /* background: linear-gradient(to right, #9699f8, #dedef7); */
+  font-weight: bold;
+  color: #535353;
+}
+.buttons {
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  display: flex;
+  margin-bottom: 20px;
+  margin-top: -40px;
+}
+/* Calendar - Date Picker  */
+/*@import "@react-aria/example-theme";
+.react-aria-DatePicker {
+  color: var(--text-color);
+  .react-aria-Group {
+    display: flex;
+    width: fit-content;
+    align-items: center;
+  }
+  .react-aria-Button {
+    background: var(--highlight-background);
+    color: var(--highlight-foreground);
+    border: 2px solid var(--field-background); 
+    forced-color-adjust: none;
+    border-radius: 4px; 
+    border: none;
+    margin-left: -1.929rem;
+    width: 1.429rem;
+    height: 1.429rem;
+    padding: 0;
+    font-size: 0.857rem;
+    box-sizing: content-box;
+
+    &[data-pressed] {
+      box-shadow: none;
+      background: var(--highlight-background);
+    }
+
+    &[data-focus-visible] {
+      outline: 2px solid var(--focus-ring-color);
+      outline-offset: 2px;
+    } 
+  }
+
+  .react-aria-DateInput {
+    padding: 4px 2.5rem 4px 8px;
+  }
+}*/
+
+/*.react-aria-Popover[data-trigger=DatePicker] {
+  max-width: unset;
+}*/
+.p {
+    margin-bottom: -10px;
+    padding: 0;
+    font-size: 1.2em;
+    /* color: #1D1C1C; */
+    text-align: left;
+}
+.count {
+  width: auto;
+  padding: 10px;
+  margin: 0px 0 5px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 1em;
+  border-radius: 10px;
+}
+.count:focus {
+  outline: none;
+  box-shadow: 0 0 5px #aaa;
+}
+.checkboxes {
+  margin: 0 0 15px 0;
+  display: flex;
+  font-size: 1em;
+}
+.checkboxesBox {
+  /*margin-right: 10px;
+  width: 1.15em;
+  font: inherit;
+  color: currentColor;*/
+  /* width: 1.20em; */
+  /* height: 1.20em; */
+  border: 3px solid currentColor;
+  border-radius: 3px;
+  margin-left: 0.1em;
+  margin-top: -10em;
+  transform: translateY(-6px); 
+  appearance: none;
+  clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  width: 0.65em;
+  height: 0.65em;
+  color: #fff;
+}
+.checkboxesBox:checked {
+  content: "";
+  width: 0.3em;
+  height: 0.3em;
+  clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  border: 6px solid;
+  transform-origin: bottom left;
+  transition: 120ms transform ease-in-out;
+  color: black;
+  transform: translateY(-5.5px) translateX(-0.5px);
+  /* box-shadow: inset 1em 1em var(--form-control-color); */
+  /* position: absolute; */
+  /* background-color: CanvasText; */
+}
+.checkboxesDiv {
+  width: 1.20em;
+  height: 1.20em;
+  /* display: inline-block; */
+  /* background-color: #535353; */
+  /* position: relative; */
+  background-color: #fff;
+  border-radius: 3px;
+  border: 3px solid black;
+  margin-top: 3px;
+}
+.eventName {
+  margin-left: 10px;
+}
+.newEvent {
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  padding-bottom: 4px;
+  padding-top: 4px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+/*input[type="checkbox"] {
+  appearance: none;
+  background-color: #fff;
+  margin: 10;
+  font: inherit;
+  color: currentColor;
+  width: 1.15em;
+  height: 1.15em;
+  border: 0.15em solid currentColor;
+  border-radius: 0.15em;
+  transform: translateY(0.25em);
+} */
+/*
+input[type="checkbox"]::before {
+  appearance: none;
+  background-color: #fff;
+  margin: 10;
+  font: inherit;
+  color: currentColor;
+  width: 1.15em;
+  height: 1.15em;
+  border: 0.15em solid currentColor;
+  border-radius: 0.15em;
+  transform: translateY(0.25em);
+}
+input[typre="checkbox"]:checked::before {
+  transform: scale(1);
+}
+input[type="checkbox"]:checked {
+  content: "";
+  width: 0.65em;
+  height: 0.65em;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  transform: scale(0.5);
+  transform-origin: bottom left;
+  transition: 120ms transform ease-in-out;
+  box-shadow: inset 1em 1em var(--form-control-color);
+  background-color: CanvasText;
+  border: 10px solid;
+} */
+.react-aria-Button {
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 0;
+}
+.edit {
+  margin-left: 5px;
+  transform: translateY(0.3em);
+  width: 1.15em;
+  height: 1.15em;
+  /* padding-top: 5px;; */
+}
+.newEventModal {
+  box-shadow: 0 8px 20px rgba(0 0 0 / 0.1);
+  border-radius: 6px;
+  background: var(--overlay-background);
+  color: palevioletred;
+  /* color: var(--text-color); */
+  border: 1px solid var(--gray-400);
+  outline: none;
+  max-width: 300px;
+  /* align-items: center;
+  display: flex;
+  height: 100vh;
+  justify-content: center; */
+}
+.adultCount {
+  margin-top: -100px;
+}
+.buttonPopUp {
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  font-size: 1 em;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 10px;
+  margin-top: -5px;
+}
+.duplicatePopUp {
+  background: transparent;
+  border: none; 
+  color: var(--text-color);
+  font-size: 1 em;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  margin: auto;
+}
+.cancelPopUp {
+  background: transparent;
+  border: none;
+  color: #fa6363;
+  font-size: 1 em;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  margin: auto;
+}
+.newEvent:focus {
+  outline:none;
+  box-shadow: 0 0 1px #aaa;
+}
