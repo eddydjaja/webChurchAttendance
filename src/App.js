@@ -1,7 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect} from "react";
 import React from 'react';
 import {Button, Calendar, CalendarCell, CalendarGrid, DateInput, DatePicker, DateSegment, Dialog, Group, Heading, Label} from 'react-aria-components';
+import Modal from 'react-bootstrap/Modal';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { CalendarDate, parseDate } from '@internationalized/date';
+import { Edit } from 'react-feather';
+import './App.css';
+import Loading from './Loading.js'; // Import the Loading component
 //Does not invalidate "+" sign
 function App() {
   const [adultCount, setAdultCount] = useState('');
@@ -9,7 +14,7 @@ function App() {
   const [specifyEvent, setSpecifyEvent] = useState('');
   const integerRegex = /^[0-9]\d*$/;
   const specialChar = /[!@#$%^&*(),.?":{}|+<>]/g;
-  const [data, setData] = useState([]);
+  // const [data, setData] = useState([]);
   const [month, setMonth] = useState();
   const [date, setDate] = useState();
   const [year, setYear] = useState();
@@ -23,6 +28,9 @@ function App() {
   const [eventToChange, setEventToChange] = useState('');
   const [defaultDate, setDefaultDate] = useState(''); 
   const [submitted, setSubmitted] = useState(false);
+  const [loading , setLoading] = useState(true);
+  const [duplicate, setDuplicate] = useState(false);
+  const [override, setOverride] = useState(false);
   const handleCheckboxChange = (id, name) => {
     console.log('Checkbox: ', id, 'Name: ', name);
     let e = eventsChecked.indexOf(id);
@@ -103,17 +111,45 @@ function App() {
         if (response.ok) {
           console.log('Data posted successfully:', data);
           return true;
-            //setShowModal(false);
+        } else {
+          throw new Error(data.message);
+        }
+    } catch (error) {
+      return false;
+    }
+  }
+  const checkAttendance = async () => {
+    let formattedMonth = month;
+    let formattedDate = date;
+    if (month < 10) {
+      formattedMonth = `0${month}`;
+    }
+    if (date < 10) {
+      formattedDate = `0${date}`;
+    }
+  let dateQuery = `${year}-${formattedMonth}-${formattedDate}`;
+  const endpoint = `/data-api/rest/Attendance/service_date`;
+  try {
+        const response = await fetch(`${endpoint}/${dateQuery}`);
+        const data = await response.json();
+        if (response.ok) {
+            console.log('Attendance data:', data);
+            if (data.value && data.value.length > 0) {
+                // alert('Attendance for this date already exists. Please check the data.');
+                setDuplicate(true);
+                return false;
+            } else {
+                console.log('No attendance data found for this date.');
+                return true;
+            }
         } else {
             throw new Error(data.message);
         }
     } catch (error) {
       return false;
-        //console.error(error);
     }
   }
   const writeEvent = async () => {
-    //console.log('Writing event:', event);
     if (eventsChecked.length === 0 && newEventsChecked.length === 0) {
       eventsChecked.push(1);
     }
@@ -174,14 +210,12 @@ function App() {
           const data = await response.json();
           if (response.ok) {
             console.log('Event data posted successfully:', data);
-            //return true; // Return true to indicate success
           } else {
             throw new Error(data.message);
           }
         }
         catch (error) {
-          console.error('Error posting event data:', error);
-          //return false; // Return false to indicate failure
+          console.error('Error posting new event data:', error);
         }
       })
   }
@@ -224,8 +258,13 @@ function App() {
       // Potentially alert the user or set an error state
     }
   }
-  const handleSubmission = async (event) => {
+  const preventDefault = async (event) => {
     event.preventDefault();
+    if (await checkAttendance()) {
+      handleSubmission();
+    }
+  }
+  const handleSubmission = async () => {
     console.log(month, date, year);
     console.log('Events in database checked:', eventsChecked);
     console.log('New events checked not pushed to database yet:', newEvents);
@@ -247,9 +286,8 @@ function App() {
       alert('Please fill in all required fields: Date, Adult Count, Child Count!');
       return;
     }
-    //console.log('Form submitted');
   }
-  const fetchData = async () => {
+  /*const fetchData = async () => {
         try {
             const response = await fetch('/data-api/rest/Attendance');
             if (!response.ok) {
@@ -261,7 +299,7 @@ function App() {
         } catch (error) {
           console.log('Error fetching data:', error);
         }
-  };
+  };*/
   const fetchEvents = async (type) => {
     try {
       const response = await fetch('/data-api/rest/Event');
@@ -337,7 +375,67 @@ function App() {
     setSpecifyEvent(''); // Clear the input field after saving
     setEventToChange(''); // Clear the event to change
   }
-  //const [placeholderDate, setPlaceholderDate] = useState(null);
+  const eraseExistingData = async () => {
+    console.log(`Erasing existing data... ${year}-${month}-${date}`);
+    // Format date as YYYY-MM-DD with leading zeros
+    let formattedMonth = month < 10 ? `0${month}` : `${month}`;
+    let formattedDate = date < 10 ? `0${date}` : `${date}`;
+    const dateQuery = `${year}-${formattedMonth}-${formattedDate}`;
+    const endpoint = `/data-api/rest/Attendance_Event`;
+    try {
+      const response = await fetch(`/data-api/rest/Attendance/service_date/${dateQuery}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-MS-API-ROLE': 'admin',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to erase existing Attendance data');
+      }
+    }
+    catch (error) {
+      console.error('Error in eraseExistingData:', error);
+    }
+    try {
+      // 1. Fetch all Attendance_Event records
+      const fetchResponse = await fetch(endpoint);
+      if (!fetchResponse.ok) {
+        throw new Error('Failed to fetch Attendance_Event records');
+      }
+      const fetchData = await fetchResponse.json();
+      // 2. Filter for records with the matching service_date
+      const recordsToDelete = (fetchData.value || []).filter(record => record.service_date === dateQuery);
+      console.log('Records to delete:', recordsToDelete);
+      if (recordsToDelete.length > 0) {
+        // 3. Delete each record by its composite primary key (service_date and event_id)
+        for (const record of recordsToDelete) {
+          try {
+            await fetch(`/data-api/rest/Attendance_Event/service_date/${dateQuery}/event_id/${record.event_id}`,
+              {
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-MS-API-ROLE': 'admin',
+                },
+              }
+            );
+          } catch (err) {
+            console.error('Error deleting Attendance_Event record:', err);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error erasing existing event data:', error);
+    }
+    return true;
+  };
+  const handleOverride = async () => {
+    console.log('Handling override...');
+    await eraseExistingData();
+    await handleSubmission();
+    setOverride(false); // Reset override state after handling
+  }
   useEffect(() => {
     //getDate(); // Ensure month, date, year are set
     const todayTemp = new Date();
@@ -352,32 +450,28 @@ function App() {
     fetchEvents('init');
     //console.log('Fetching data from date...');
   }, []); // Fetch events on mount and when year, month, or date changes
-  // useEffect(() => {
-  //   // Update placeholderDate whenever year, month, or date changes
-  //   console.log('Year:', year, 'Month:', month, 'Date:', date);
-  //   let temp = new CalendarDate(year, month, date);//
-  //   if (temp.toString() !== "0NaN-NaN-NaN") {
-  //     setDefaultDate(temp.toString());
-  //   }
-  //   console.log('Updated default date:', defaultDate);
-  //   /*if (placeholderDate !== '0NaN-NaN-NaN') {
-  //     console.log('Updated placeholder date2:', parseDate(placeholderDate));
-  //   }*/
-  //   //console.log(parseDate(`${placeholderDate.year}-${placeholderDate.month() + 1}-${placeholderDate.day()}`)); 
-  // }, [year, month, date]);
-
-  //let temp = '2025-01-01';
-  //let temp = `${year}-${month}-${date}`;
-  // if (year && month && date) {
-  //   placeholderDate = new CalendarDate(year, month, date);
-  // }
+  useEffect(() => {
+    if (events.length !== 0) {
+      setLoading(false);
+      console.log('Events fetched successfully:', events);
+    }
+  }, [events]); // Run this effect when events change
+  useEffect(() => {
+    console.log('Overriding date');
+    if (override) {
+      handleOverride();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [override]);
   return (
+    loading ? (
+      <Loading/>
+    ):
     !submitted ? (
       <div className="App">
       <h1>CBM Attendance</h1>
       <form>
         <DatePicker
-          //defaultValue={parseDate('0000-00-00')} // Set the default value for the DatePicker
           defaultValue={defaultDate !== '' ? parseDate(defaultDate) : null} // Set the default value for the DatePicker
           onChange={(e) => {
             if (e !== null) {
@@ -388,31 +482,27 @@ function App() {
           }}
         >
           <Label>Date</Label>
-          <Group>
+          <Group className="dateGroup">
             <DateInput className="date-input"
-              //defaultValue={placeholderDate} // Set the default value for the DateInput
-              //defaultText={`${month}/${date}/${year}`} // Set the default visible value for the DateInput
               >
               {(segment) => <DateSegment segment={segment}
-                // {...console.log('Segment:', segment)}
-                //segmentPlaceholder={`${month}/${date}/${year}`} // Set placeholder for date segment
                 onChange={(e) => {
                   console.log('Date segment changed:', e.target.value);
                 }}/>
               }
             </DateInput>
-            <Button onClick={e => handleShowCalendar(e)}>▼</Button>
+            <Button className="calendar-buttons" onClick={e => handleShowCalendar(e)}>▼</Button>
           </Group>
           {showCalendar? 
             <Dialog>
               <Calendar>
-                <header>
+                <header className="calendar-header">
                   <Button slot="previous">◀</Button>
                   <Heading />
                   <Button slot="next">▶</Button>
                 </header>
-                <CalendarGrid>
-                  {(date) => <CalendarCell date={date} />}
+                <CalendarGrid className="calendar-grid">
+                  {(date) => <CalendarCell date={date} className="date"/>}
                 </CalendarGrid>
               </Calendar>
             </Dialog>
@@ -420,10 +510,10 @@ function App() {
         </DatePicker>
         <br></br>
         <br></br>
-        <label>
+        <label className = "adultCount">
           Adult Count
           <br></br>
-          <input type="number" name="adult" min="0"
+          <input type="number" name="adult" min="0" className = "count"
             onChange={(e) => checkNumber(e.target.value, 'setAdultCount')} value={adultCount}
           />
         </label>
@@ -432,69 +522,131 @@ function App() {
         <label>
           Child Count
           <br></br>
-          <input type="number" name="child" min="0"
+          <input type="number" name="child" min="0" className = "count"
             onChange={(e) => checkNumber(e.target.value, 'setChildCount')} value={childCount}
           />
         </label>
         <br></br>
         <br></br>
-        Events
+        <Label>Events (Optional)</Label>
         <br></br>
-        
         {events.map((event) => (
-          <label key={event.id}>
-            <input type="checkbox" name="event" value={event.event_name}
-            onChange={(e) => handleCheckboxChange(event.id, event.event_name)} // Handle checkbox changes
-            />
-            {event.event_name}
+          <label key={event.id} className = "checkboxes"> 
+          <div className="checkboxesDiv">
+          <input type="checkbox" name="event" value={event.event_name} className = "checkboxesBox"
+          onChange={(e) => handleCheckboxChange(event.id, event.event_name)} // Handle checkbox changes
+          />
+          </div>
+          <div className="eventName">{event.event_name}</div>
           </label>
         ))}
         {console.log('New events:', newEvents)}
         {newEvents.length !== 0 ?
           newEvents.map((event) => (
-            <label key={event}>
-              <input type="checkbox" name="event" value={event} defaultChecked
+            <label key={event} className="checkboxes">
+              <div className="checkboxesDiv">
+              <input type="checkbox" name="event" value={event} defaultChecked className = "checkboxesBox"
               onChange={(e) => handleCheckboxChangeNewEvents(event)} // Handle checkbox changes
               />
-              {event}
-              <Button onPress={() => editEventName(event)}>Edit Name</Button>
+              </div>
+              <div className="eventName">{event}</div> 
+              <Edit  name="edit" size={24} color="#535353" className="edit" onClick={() => editEventName(event)}/>
             </label>
           ))
           : null 
         }
         {editName ? 
-          <Dialog>
-            <input type="text" name="editEvent" onChange={(value) => settingEventName(value)} value={specifyEvent} required ></input>
-            <Button onPress={() => handleChangeName()}>Save</Button>
-          </Dialog> : null
+          <Modal
+            show={editName}
+            onHide={() => { setEditName(false); setSpecifyEvent(''); }}
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+          >
+            <Modal.Header closeButton>
+              <Modal.Title id="contained-modal-title-vcenter">
+                Edit Event Name
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <input type="text" className="newEvent" name="editEvent" onChange={(value) => settingEventName(value)} value={specifyEvent} required />
+              <Button className="buttonPopUp" onPress={() => handleChangeName()}>Save</Button>
+            </Modal.Body>
+          </Modal>
+          : null
         }
-        <Button onPress={(e) => {addNewEvent(e)}}>Add New Event</Button>
+        <br></br>
         {addingNewEvent? 
-          <div>
-          <Dialog> 
-            <input type="text" name="newEvent" placeholder="New Event Name" onChange={(value) => settingEventName(value)} value={specifyEvent} required ></input>
-            <Button onPress={() => handleNewEventSubmission(specifyEvent)}>Add</Button>
-          </Dialog>
-          </div>:null
+        <Modal
+            show={addingNewEvent}
+            onHide={() => {setAddingNewEvent(false); setSpecifyEvent('');}}
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+          >
+            <Modal.Header closeButton>
+              <Modal.Title id="contained-modal-title-vcenter">
+                Add New Event
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <input type="text" className="newEvent" name="newEvent" placeholder="New Event Name" onChange={(value) => settingEventName(value)} value={specifyEvent} required />
+              <Button className="buttonPopUp" onPress={() => handleNewEventSubmission(specifyEvent)}>Add</Button>
+            </Modal.Body>
+          </Modal>
+          :null
+        }
+        {duplicate ? 
+          <Modal
+            show={duplicate}
+            onHide={() => { setDuplicate(false);}}
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+          >
+            <Modal.Header closeButton>
+              <Modal.Title id="contained-modal-title-vcenter">
+                Duplicate Found
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              Attendance for this date already exists. Do you want to continue with overriding the existing data?
+              <br></br>
+              <br></br>
+            <div className="duplicatePopUp">
+            <Button className="duplicatePopUp" onPress={() => setOverride(true)}>Continue</Button>
+            <Button className="cancelPopUp" onPress={() => setDuplicate(false)}>Cancel</Button>
+            </div>
+            </Modal.Body>
+          </Modal>
+          : null
         }
         <br></br>
         <br></br>
-        <button type="submit" onClick={handleSubmission}>Submit</button>
+        <div className = "buttons"> 
+          <Button onPress={(e) => {addNewEvent(e)}} className="addEvent">Add New Event</Button>
+          <button type="submit" onClick={preventDefault} className="addEvent">Submit</button>
+        </div>
       </form>
-      <button id="get" onClick={fetchData}>Get</button>
-      {data.map(entry => (
+      {/* <button id="get" onClick={fetchData}>Get</button> */}
+      {/* <button id="check" onClick={checkAttendance}>Check</button> */}
+      {/*data.map(entry => (
         <div key={entry.service_date + entry.adult_count + entry.child_count}>
           {`${entry.service_date} ${entry.adult_count} ${entry.child_count} ${entry.total}`}
         </div>
-      ))}
+      ))*/}
     </div>
     ) : (
     <div className="App">
       <h1>CBM Attendance</h1>
-      <p>Thank you for submitting your attendance!</p>
-      <Button onPress={() => window.location.reload()}>Submit Another Attendance</Button>
+      <p>Attendance submitted. Thank you!</p>
+      <br></br>
+      <Button className="addEvent" onPress={() => window.location.reload()}>Submit another attendance</Button>
     </div>
     )
   );
 }
 export default App;
+/*Local Testing 
+Set connection string first
+npx swa start http://localhost:3000 --run "npm i && npm start" --data-api-location swa-db-connections*/
