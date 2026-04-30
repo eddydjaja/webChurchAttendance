@@ -1,4 +1,4 @@
-import { useState, useEffect} from "react";
+import { useState, useEffect, useCallback } from "react";
 import React from 'react';
 import {Button, Calendar, CalendarCell, CalendarGrid, DateInput, DatePicker, DateSegment, Dialog, Group, Heading, Label} from 'react-aria-components';
 import Modal from 'react-bootstrap/Modal';
@@ -31,6 +31,27 @@ function App() {
   const [loading , setLoading] = useState(true);
   const [duplicate, setDuplicate] = useState(false);
   const [override, setOverride] = useState(false);
+
+  const fetchJson = useCallback(async (url, options = {}) => {
+    const response = await fetch(url, options);
+    const contentType = response.headers.get('content-type') || '';
+
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+    }
+
+    if (!contentType.includes('application/json')) {
+      const body = await response.text();
+      const isHtml = body.trim().startsWith('<!DOCTYPE') || body.trim().startsWith('<html');
+      if (isHtml) {
+        throw new Error('Received HTML instead of JSON from /data-api. This usually means local dev is running without SWA proxying.');
+      }
+      throw new Error('Expected JSON response but got a different content type.');
+    }
+
+    return response.json();
+  }, []);
+
   const handleCheckboxChange = (id, name) => {
     console.log('Checkbox: ', id, 'Name: ', name);
     let e = eventsChecked.indexOf(id);
@@ -300,13 +321,9 @@ function App() {
           console.log('Error fetching data:', error);
         }
   };*/
-  const fetchEvents = async (type) => {
+  const fetchEvents = useCallback(async (type) => {
     try {
-      const response = await fetch('/data-api/rest/Event');
-      if (!response.ok) {
-        throw new Error(response.statusText);
-      }
-      const data = await response.json();
+      const data = await fetchJson('/data-api/rest/Event');
       // Assuming data.value is an array of event objects
       // and each object has an event_name property.
       if (data.value && Array.isArray(data.value)) {
@@ -332,7 +349,7 @@ function App() {
       console.log('Error fetching events:', error);
       setEvents([]); // Set to empty array on error
     }
-  };
+  }, [fetchJson]);
   const handleShowCalendar = (event) => {
     event.preventDefault();
     setShowCalendar(!showCalendar);
@@ -449,7 +466,7 @@ function App() {
     setDefaultDate(today.toString());
     fetchEvents('init');
     //console.log('Fetching data from date...');
-  }, []); // Fetch events on mount and when year, month, or date changes
+  }, [fetchEvents]); // Fetch events on mount and when year, month, or date changes
   useEffect(() => {
     if (events.length !== 0) {
       setLoading(false);
@@ -649,4 +666,4 @@ function App() {
 export default App;
 /*Local Testing 
 Set connection string first
-npx swa start http://localhost:3000 --run "npm i && npm start" --data-api-location swa-db-connections*/
+npm run start:swa*/
