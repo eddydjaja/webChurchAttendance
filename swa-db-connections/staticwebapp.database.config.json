@@ -20,7 +20,7 @@
     },
     "host": {
       "cors": {
-        "origins": ["http://localhost:3000", "http://localhost:4280", "https://ambitious-glacier-09f6cb60f.6.azurestaticapps.net/"],
+        "origins": ["http://localhost:3000", "http://localhost:4280", "https://ambitious-glacier-09f6cb60f.6.azurestaticapps.net"],
         "allow-credentials": false
       },
       "authentication": {
